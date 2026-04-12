@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:manyoyo_app/core/auth_notifier.dart';
 
@@ -18,6 +19,9 @@ class ApiClient {
   String _baseUrl;
   late final Dio _dio;
   final CookieJar cookieJar;
+
+  @visibleForTesting
+  Dio get testDio => _dio;
   AuthNotifier? authNotifier;
 
   String get baseUrl => _baseUrl;
