@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manyoyo_flutter/web_shell_navigation.dart';
+import 'package:manyoyo_app/web_shell_navigation.dart';
 
 void main() {
   test('allows same-origin navigation inside manyoyo shell', () {

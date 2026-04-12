@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:manyoyo_flutter/main.dart';
+import 'package:manyoyo_app/main.dart';
 
 void main() {
   testWidgets('renders manyoyo flutter placeholder', (

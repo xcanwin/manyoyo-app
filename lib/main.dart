@@ -8,7 +8,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart' hide Cookie;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:manyoyo_flutter/web_shell_navigation.dart';
+import 'package:manyoyo_app/web_shell_navigation.dart';
 
 const String _manyoyoServerUrl = String.fromEnvironment(
   'MANYOYO_SERVER_URL',
