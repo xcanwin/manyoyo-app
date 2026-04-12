@@ -11,6 +11,10 @@ import 'package:manyoyo_app/core/server_config.dart';
 import 'package:manyoyo_app/features/setup/setup_page.dart';
 import 'package:manyoyo_app/features/auth/login_page.dart';
 import 'package:manyoyo_app/features/sessions/sessions_page.dart';
+import 'package:manyoyo_app/features/chat/chat_page.dart';
+import 'package:manyoyo_app/features/terminal/terminal_page.dart';
+import 'package:manyoyo_app/features/files/files_page.dart';
+import 'package:manyoyo_app/features/config/config_page.dart';
 
 class ManyoyoApp extends StatefulWidget {
   const ManyoyoApp({super.key});
@@ -62,6 +66,25 @@ class _ManyoyoAppState extends State<ManyoyoApp> {
       GoRoute(path: '/setup', builder: (_, __) => const SetupPage()),
       GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
       GoRoute(path: '/sessions', builder: (_, __) => const SessionsPage()),
+      GoRoute(
+        path: '/sessions/:ref/chat',
+        builder: (_, state) => ChatPage(
+          sessionRef: state.pathParameters['ref']!,
+        ),
+      ),
+      GoRoute(
+        path: '/sessions/:ref/term',
+        builder: (_, state) => TerminalPage(
+          sessionRef: state.pathParameters['ref']!,
+        ),
+      ),
+      GoRoute(
+        path: '/sessions/:ref/files',
+        builder: (_, state) => FilesPage(
+          sessionRef: state.pathParameters['ref']!,
+        ),
+      ),
+      GoRoute(path: '/config', builder: (_, __) => const ConfigPage()),
     ],
     initialLocation: '/setup',
   );
