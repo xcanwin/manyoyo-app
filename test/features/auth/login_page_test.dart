@@ -1,7 +1,4 @@
-import 'dart:typed_data';
-
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -15,27 +12,10 @@ import 'package:manyoyo_app/core/api_client.dart';
 import 'package:manyoyo_app/core/auth_notifier.dart';
 import 'package:manyoyo_app/features/auth/login_page.dart';
 
+import '../../helpers/stub_adapter.dart';
+
 @GenerateMocks([CookieJar])
 import 'login_page_test.mocks.dart';
-
-class _StubAdapter implements HttpClientAdapter {
-  _StubAdapter({required this.statusCode, this.body = ''});
-
-  final int statusCode;
-  final String body;
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<Uint8List>? requestStream,
-    Future<void>? cancelFuture,
-  ) async {
-    return ResponseBody.fromString(body, statusCode);
-  }
-
-  @override
-  void close({bool force = false}) {}
-}
 
 ApiClient makeClient({required int loginStatus}) {
   final cookieJar = MockCookieJar();
@@ -46,17 +26,20 @@ ApiClient makeClient({required int loginStatus}) {
     baseUrl: 'http://127.0.0.1:3000',
     cookieJar: cookieJar,
   );
-  client.testDio.httpClientAdapter = _StubAdapter(statusCode: loginStatus);
+  client.testDio.httpClientAdapter = StubAdapter(statusCode: loginStatus);
   return client;
 }
 
-Widget buildLoginPage({required ApiClient apiClient, required AuthNotifier authNotifier}) {
+Widget buildLoginPage({
+  required ApiClient apiClient,
+  required AuthNotifier authNotifier,
+}) {
   final router = GoRouter(
     routes: [
-      GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/sessions',
-        builder: (_, __) => const Scaffold(body: Text('sessions')),
+        builder: (context, state) => const Scaffold(body: Text('sessions')),
       ),
     ],
     initialLocation: '/login',
@@ -67,10 +50,7 @@ Widget buildLoginPage({required ApiClient apiClient, required AuthNotifier authN
       ChangeNotifierProvider<AuthNotifier>.value(value: authNotifier),
       Provider<ApiClient>.value(value: apiClient),
     ],
-    child: MaterialApp.router(
-      theme: buildTheme(),
-      routerConfig: router,
-    ),
+    child: MaterialApp.router(theme: buildTheme(), routerConfig: router),
   );
 }
 
@@ -85,10 +65,9 @@ void main() {
     final authNotifier = AuthNotifier();
     final client = makeClient(loginStatus: 200);
 
-    await tester.pumpWidget(buildLoginPage(
-      apiClient: client,
-      authNotifier: authNotifier,
-    ));
+    await tester.pumpWidget(
+      buildLoginPage(apiClient: client, authNotifier: authNotifier),
+    );
     await tester.pump();
 
     expect(find.text('登录'), findsWidgets);
@@ -100,10 +79,9 @@ void main() {
     final authNotifier = AuthNotifier();
     final client = makeClient(loginStatus: 200);
 
-    await tester.pumpWidget(buildLoginPage(
-      apiClient: client,
-      authNotifier: authNotifier,
-    ));
+    await tester.pumpWidget(
+      buildLoginPage(apiClient: client, authNotifier: authNotifier),
+    );
     await tester.pump();
 
     await tester.tap(find.text('登录').last);
@@ -112,25 +90,19 @@ void main() {
     expect(find.text('请输入用户名和密码。'), findsOneWidget);
   });
 
-  testWidgets('successful login sets auth state and navigates to sessions',
-      (tester) async {
+  testWidgets('successful login sets auth state and navigates to sessions', (
+    tester,
+  ) async {
     final authNotifier = AuthNotifier();
     final client = makeClient(loginStatus: 200);
 
-    await tester.pumpWidget(buildLoginPage(
-      apiClient: client,
-      authNotifier: authNotifier,
-    ));
+    await tester.pumpWidget(
+      buildLoginPage(apiClient: client, authNotifier: authNotifier),
+    );
     await tester.pump();
 
-    await tester.enterText(
-      find.byType(TextField).first,
-      'admin',
-    );
-    await tester.enterText(
-      find.byType(TextField).last,
-      'secret',
-    );
+    await tester.enterText(find.byType(TextField).first, 'admin');
+    await tester.enterText(find.byType(TextField).last, 'secret');
     await tester.tap(find.text('登录').last);
     await tester.pumpAndSettle();
 
@@ -142,10 +114,9 @@ void main() {
     final authNotifier = AuthNotifier();
     final client = makeClient(loginStatus: 401);
 
-    await tester.pumpWidget(buildLoginPage(
-      apiClient: client,
-      authNotifier: authNotifier,
-    ));
+    await tester.pumpWidget(
+      buildLoginPage(apiClient: client, authNotifier: authNotifier),
+    );
     await tester.pump();
 
     await tester.enterText(find.byType(TextField).first, 'wrong');

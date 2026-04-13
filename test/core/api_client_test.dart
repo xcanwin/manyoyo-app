@@ -1,7 +1,4 @@
-import 'dart:typed_data';
-
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -9,36 +6,17 @@ import 'package:mockito/mockito.dart';
 import 'package:manyoyo_app/core/api_client.dart';
 import 'package:manyoyo_app/core/auth_notifier.dart';
 
+import '../helpers/stub_adapter.dart';
+
 @GenerateMocks([CookieJar])
 import 'api_client_test.mocks.dart';
-
-// Mock HTTP adapter that returns a fixed status code.
-class _StubAdapter implements HttpClientAdapter {
-  _StubAdapter(this.statusCode);
-
-  final int statusCode;
-  final List<RequestOptions> captured = [];
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<Uint8List>? requestStream,
-    Future<void>? cancelFuture,
-  ) async {
-    captured.add(options);
-    return ResponseBody.fromString('', statusCode);
-  }
-
-  @override
-  void close({bool force = false}) {}
-}
 
 ApiClient makeClient({AuthNotifier? authNotifier, int stubStatus = 200}) {
   final cookieJar = MockCookieJar();
   when(cookieJar.loadForRequest(any)).thenAnswer((_) async => []);
   when(cookieJar.saveFromResponse(any, any)).thenAnswer((_) async {});
 
-  final adapter = _StubAdapter(stubStatus);
+  final adapter = StubAdapter(statusCode: stubStatus);
   final client = ApiClient(
     baseUrl: 'http://127.0.0.1:3000',
     cookieJar: cookieJar,
@@ -54,7 +32,7 @@ void main() {
     when(cookieJar.loadForRequest(any)).thenAnswer((_) async => []);
     when(cookieJar.saveFromResponse(any, any)).thenAnswer((_) async {});
 
-    final adapter = _StubAdapter(200);
+    final adapter = StubAdapter(statusCode: 200);
     final client = ApiClient(
       baseUrl: 'http://127.0.0.1:3000',
       cookieJar: cookieJar,

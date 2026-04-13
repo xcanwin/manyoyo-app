@@ -47,22 +47,17 @@ class SessionsNotifier extends ChangeNotifier {
     required String containerName,
     String? yolo,
   }) async {
-    await _client.post<dynamic>('/api/sessions', data: {
-      'containerName': containerName,
-      if (yolo != null) 'yolo': yolo,
-    });
+    await _client.post<dynamic>(
+      '/api/sessions',
+      data: {'containerName': containerName, 'yolo': ?yolo},
+    );
     await loadSessions();
   }
 
-  Future<void> createAgent({
-    required String sessionRef,
-    String? yolo,
-  }) async {
+  Future<void> createAgent({required String sessionRef, String? yolo}) async {
     await _client.post<dynamic>(
       '/api/sessions/${Uri.encodeComponent(sessionRef)}/agents',
-      data: {
-        if (yolo != null) 'yolo': yolo,
-      },
+      data: {'yolo': ?yolo},
     );
     await loadSessions();
   }

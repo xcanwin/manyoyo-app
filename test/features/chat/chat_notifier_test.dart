@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -27,11 +26,25 @@ void main() {
     final notifier = ChatNotifier();
 
     final stream = makeEventStream([
-      {'type': 'meta', 'containerName': 'c', 'sessionName': 'a', 'agentProgram': 'claude', 'resumeAttempted': false, 'resumeSucceeded': false},
+      {
+        'type': 'meta',
+        'containerName': 'c',
+        'sessionName': 'a',
+        'agentProgram': 'claude',
+        'resumeAttempted': false,
+        'resumeSucceeded': false,
+      },
       {'type': 'content_delta', 'content': 'Hello'},
       {'type': 'content_delta', 'content': ', world'},
       {'type': 'content_delta', 'content': '!'},
-      {'type': 'result', 'exitCode': 0, 'output': '', 'resumeAttempted': false, 'resumeSucceeded': false, 'interrupted': false},
+      {
+        'type': 'result',
+        'exitCode': 0,
+        'output': '',
+        'resumeAttempted': false,
+        'resumeSucceeded': false,
+        'interrupted': false,
+      },
     ]);
 
     await notifier.processStream(stream);
@@ -46,7 +59,14 @@ void main() {
     final notifier = ChatNotifier();
 
     final stream = makeEventStream([
-      {'type': 'result', 'exitCode': 0, 'output': '', 'resumeAttempted': false, 'resumeSucceeded': false, 'interrupted': false},
+      {
+        'type': 'result',
+        'exitCode': 0,
+        'output': '',
+        'resumeAttempted': false,
+        'resumeSucceeded': false,
+        'interrupted': false,
+      },
     ]);
 
     notifier.addUserMessage('Hello agent');
@@ -62,7 +82,14 @@ void main() {
     final stream = makeEventStream([
       {'type': 'trace', 'text': 'Tool call: bash'},
       {'type': 'content_delta', 'content': 'done'},
-      {'type': 'result', 'exitCode': 0, 'output': '', 'resumeAttempted': false, 'resumeSucceeded': false, 'interrupted': false},
+      {
+        'type': 'result',
+        'exitCode': 0,
+        'output': '',
+        'resumeAttempted': false,
+        'resumeSucceeded': false,
+        'interrupted': false,
+      },
     ]);
 
     await notifier.processStream(stream);

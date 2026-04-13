@@ -9,7 +9,7 @@ import 'package:manyoyo_app/core/auth_notifier.dart';
 
 class ApiClient {
   ApiClient({required String baseUrl, required this.cookieJar})
-      : _baseUrl = baseUrl {
+    : _baseUrl = baseUrl {
     _dio = Dio(BaseOptions(baseUrl: baseUrl))
       ..interceptors.add(CookieManager(cookieJar))
       ..interceptors.add(_CsrfInterceptor())
@@ -61,24 +61,42 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    CancelToken? cancelToken,
   }) async {
-    return _dio.get<T>(path, queryParameters: queryParameters, options: options);
+    return _dio.get<T>(
+      path,
+      queryParameters: queryParameters,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 
   Future<Response<T>> post<T>(
     String path, {
     dynamic data,
     Options? options,
+    CancelToken? cancelToken,
   }) async {
-    return _dio.post<T>(path, data: data, options: options);
+    return _dio.post<T>(
+      path,
+      data: data,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 
   Future<Response<T>> put<T>(
     String path, {
     dynamic data,
     Options? options,
+    CancelToken? cancelToken,
   }) async {
-    return _dio.put<T>(path, data: data, options: options);
+    return _dio.put<T>(
+      path,
+      data: data,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 
   Future<String> getCookieHeader() async {

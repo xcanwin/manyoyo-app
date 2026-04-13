@@ -7,20 +7,14 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'package:manyoyo_app/app/theme.dart';
+import 'package:manyoyo_app/app/widgets.dart';
 import 'package:manyoyo_app/core/api_client.dart';
 import 'package:manyoyo_app/features/chat/chat_notifier.dart';
 import 'package:manyoyo_app/models/agent_event.dart';
 import 'package:manyoyo_app/models/message.dart';
 
-// ── palette (dark terminal green) ───────────────────────────────────────────
-const _kBg = Color(0xFF0F1A14);
-const _kSurface = Color(0xFF172217);
-const _kBorder = Color(0xFF2B4035);
-const _kAccent = Color(0xFF3DDB87);
-const _kAccentDim = Color(0xFF0B6E4F);
-const _kTextHigh = Color(0xFFE8F5EE);
-const _kTextMid = Color(0xFF7FA88E);
-const _kTextLow = Color(0xFF3D5446);
+// ── page-specific color ─────────────────────────────────────────────────────
 const _kUserBubble = Color(0xFF1C3228);
 
 class ChatPage extends StatefulWidget {
@@ -84,10 +78,8 @@ class _ChatPageState extends State<ChatPage> {
       final resp = await _client.post<ResponseBody>(
         '/api/sessions/${Uri.encodeComponent(widget.sessionRef)}/agent/stream',
         data: {'prompt': prompt},
-        options: Options(
-          responseType: ResponseType.stream,
-          cancelToken: _cancelToken,
-        ),
+        options: Options(responseType: ResponseType.stream),
+        cancelToken: _cancelToken,
       );
 
       final eventStream = _parseNdjsonStream(resp.data!.stream);
@@ -102,9 +94,7 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  Stream<AgentEvent> _parseNdjsonStream(
-    Stream<List<int>> byteStream,
-  ) async* {
+  Stream<AgentEvent> _parseNdjsonStream(Stream<List<int>> byteStream) async* {
     final lines = byteStream
         .transform(utf8.decoder)
         .transform(const LineSplitter());
@@ -140,33 +130,26 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<ChatNotifier>.value(
       value: _notifier,
-      child: Scaffold(
-        backgroundColor: _kBg,
-        body: Column(
-          children: [
-            _TopBar(
-              sessionRef: widget.sessionRef,
-              onStop: _notifier.isStreaming ? _stopAgent : null,
-            ),
-            Expanded(
-              child: _loadingHistory
-                  ? const Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: _kAccent,
-                        ),
-                      ),
-                    )
-                  : _MessageList(scrollController: _scrollController),
-            ),
-            _ComposerBar(
-              controller: _inputController,
-              onSend: _sendMessage,
-            ),
-          ],
+      child: DarkPageScaffold(
+        header: _TopBar(
+          sessionRef: widget.sessionRef,
+          onStop: _notifier.isStreaming ? _stopAgent : null,
+        ),
+        body: _loadingHistory
+            ? const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: kDarkAccent,
+                  ),
+                ),
+              )
+            : _MessageList(scrollController: _scrollController),
+        footer: _ComposerBar(
+          controller: _inputController,
+          onSend: _sendMessage,
         ),
       ),
     );
@@ -181,68 +164,51 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: _kSurface,
-        border: Border(bottom: BorderSide(color: _kBorder)),
+    return DarkPageHeader(
+      title: sessionRef,
+      subtitle: 'agent chat',
+      onBack: () => context.go('/sessions'),
+      leading: const Icon(
+        Icons.smart_toy_rounded,
+        size: 16,
+        color: kDarkAccentDim,
       ),
-      padding: EdgeInsets.only(
-        top: MediaQuery.paddingOf(context).top + 8,
-        left: 8,
-        right: 12,
-        bottom: 10,
+      tabs: buildSessionTabs(
+        context: context,
+        sessionRef: sessionRef,
+        current: SessionPageSection.chat,
       ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: _kTextMid),
-            onPressed: () => context.go('/sessions'),
-            tooltip: '返回',
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              sessionRef,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 13,
-                color: _kTextHigh,
-                fontWeight: FontWeight.w600,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Consumer<ChatNotifier>(
-            builder: (_, notifier, __) => notifier.isStreaming
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: _kAccent,
+      actions: [
+        Consumer<ChatNotifier>(
+          builder: (context, notifier, child) => notifier.isStreaming
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        color: kDarkAccent,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    TextButton(
+                      onPressed: onStop,
+                      child: const Text(
+                        'stop',
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          color: Color(0xFFE06C5B),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      TextButton(
-                        onPressed: onStop,
-                        child: const Text(
-                          'stop',
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 12,
-                            color: Color(0xFFE06C5B),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
-      ),
+                    ),
+                  ],
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 }
@@ -289,20 +255,21 @@ class _MessageBubbleState extends State<_MessageBubble> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
-        crossAxisAlignment:
-            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
             const Row(
               children: [
-                Icon(Icons.smart_toy_rounded, size: 12, color: _kAccentDim),
+                Icon(Icons.smart_toy_rounded, size: 12, color: kDarkAccentDim),
                 SizedBox(width: 5),
                 Text(
                   'agent',
                   style: TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 10,
-                    color: _kTextLow,
+                    color: kDarkTextLow,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -315,7 +282,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
               maxWidth: MediaQuery.sizeOf(context).width * 0.85,
             ),
             decoration: BoxDecoration(
-              color: isUser ? _kUserBubble : _kSurface,
+              color: isUser ? _kUserBubble : kDarkSurface,
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(12),
                 topRight: const Radius.circular(12),
@@ -324,7 +291,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
               ),
               border: isUser
                   ? null
-                  : Border.all(color: _kBorder, width: 0.5),
+                  : Border.all(color: kDarkBorder, width: 0.5),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: isUser
@@ -332,7 +299,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                     widget.message.content,
                     style: const TextStyle(
                       fontSize: 14,
-                      color: _kTextHigh,
+                      color: kDarkTextHigh,
                       height: 1.5,
                     ),
                   )
@@ -343,26 +310,26 @@ class _MessageBubbleState extends State<_MessageBubble> {
                     styleSheet: MarkdownStyleSheet(
                       p: const TextStyle(
                         fontSize: 14,
-                        color: _kTextHigh,
+                        color: kDarkTextHigh,
                         height: 1.6,
                       ),
                       code: const TextStyle(
                         fontFamily: 'monospace',
                         fontSize: 13,
-                        color: _kAccent,
+                        color: kDarkAccent,
                         backgroundColor: Color(0xFF0F1A14),
                       ),
                       codeblockDecoration: BoxDecoration(
                         color: const Color(0xFF0F1A14),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: _kBorder),
+                        border: Border.all(color: kDarkBorder),
                       ),
-                      h1: const TextStyle(color: _kTextHigh, fontSize: 18),
-                      h2: const TextStyle(color: _kTextHigh, fontSize: 16),
-                      h3: const TextStyle(color: _kTextHigh, fontSize: 15),
+                      h1: const TextStyle(color: kDarkTextHigh, fontSize: 18),
+                      h2: const TextStyle(color: kDarkTextHigh, fontSize: 16),
+                      h3: const TextStyle(color: kDarkTextHigh, fontSize: 15),
                       blockquoteDecoration: const BoxDecoration(
                         border: Border(
-                          left: BorderSide(color: _kAccentDim, width: 3),
+                          left: BorderSide(color: kDarkAccentDim, width: 3),
                         ),
                       ),
                       blockquotePadding: const EdgeInsets.only(left: 10),
@@ -376,10 +343,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
               onTap: () => setState(() => _showTraces = !_showTraces),
               borderRadius: BorderRadius.circular(4),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -388,7 +352,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                           ? Icons.expand_less_rounded
                           : Icons.expand_more_rounded,
                       size: 14,
-                      color: _kTextLow,
+                      color: kDarkTextLow,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -396,7 +360,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                       style: const TextStyle(
                         fontFamily: 'monospace',
                         fontSize: 10,
-                        color: _kTextLow,
+                        color: kDarkTextLow,
                         letterSpacing: 0.3,
                       ),
                     ),
@@ -411,7 +375,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F1A14),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _kBorder, width: 0.5),
+                  border: Border.all(color: kDarkBorder, width: 0.5),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,7 +388,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                             style: const TextStyle(
                               fontFamily: 'monospace',
                               fontSize: 11,
-                              color: _kTextMid,
+                              color: kDarkTextMid,
                               height: 1.4,
                             ),
                           ),
@@ -441,10 +405,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
 }
 
 class _ComposerBar extends StatelessWidget {
-  const _ComposerBar({
-    required this.controller,
-    required this.onSend,
-  });
+  const _ComposerBar({required this.controller, required this.onSend});
 
   final TextEditingController controller;
   final VoidCallback onSend;
@@ -455,8 +416,8 @@ class _ComposerBar extends StatelessWidget {
       builder: (context, notifier, _) {
         return Container(
           decoration: const BoxDecoration(
-            color: _kSurface,
-            border: Border(top: BorderSide(color: _kBorder)),
+            color: kDarkSurface,
+            border: Border(top: BorderSide(color: kDarkBorder)),
           ),
           padding: EdgeInsets.only(
             left: 12,
@@ -476,32 +437,34 @@ class _ComposerBar extends StatelessWidget {
                   style: const TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 14,
-                    color: _kTextHigh,
+                    color: kDarkTextHigh,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Send a message...',
                     hintStyle: const TextStyle(
-                      color: _kTextLow,
+                      color: kDarkTextLow,
                       fontFamily: 'monospace',
                     ),
                     filled: true,
-                    fillColor: _kBg,
+                    fillColor: kDarkBg,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 10,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _kBorder),
+                      borderSide: const BorderSide(color: kDarkBorder),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _kBorder),
+                      borderSide: const BorderSide(color: kDarkBorder),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: _kAccentDim, width: 1.5),
+                      borderSide: const BorderSide(
+                        color: kDarkAccentDim,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                   onSubmitted: (_) => onSend(),
@@ -514,7 +477,7 @@ class _ComposerBar extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: notifier.isStreaming ? _kTextLow : _kAccentDim,
+                    color: notifier.isStreaming ? kDarkTextLow : kDarkAccentDim,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -541,14 +504,14 @@ class _EmptyChat extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.smart_toy_rounded, size: 36, color: _kTextLow),
+          Icon(Icons.smart_toy_rounded, size: 36, color: kDarkTextLow),
           SizedBox(height: 12),
           Text(
             'send a message to start',
             style: TextStyle(
               fontFamily: 'monospace',
               fontSize: 13,
-              color: _kTextLow,
+              color: kDarkTextLow,
               letterSpacing: 0.5,
             ),
           ),

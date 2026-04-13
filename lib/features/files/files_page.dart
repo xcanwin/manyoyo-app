@@ -2,18 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'package:manyoyo_app/app/theme.dart';
+import 'package:manyoyo_app/app/widgets.dart';
 import 'package:manyoyo_app/core/api_client.dart';
 import 'package:manyoyo_app/features/files/file_viewer_page.dart';
 import 'package:manyoyo_app/models/fs_entry.dart';
-
-const _kBg = Color(0xFF0F1A14);
-const _kSurface = Color(0xFF172217);
-const _kBorder = Color(0xFF2B4035);
-const _kAccent = Color(0xFF3DDB87);
-const _kAccentDim = Color(0xFF0B6E4F);
-const _kTextHigh = Color(0xFFE8F5EE);
-const _kTextMid = Color(0xFF7FA88E);
-const _kTextLow = Color(0xFF3D5446);
 
 class FilesPage extends StatefulWidget {
   const FilesPage({super.key, required this.sessionRef});
@@ -87,20 +80,15 @@ class _FilesPageState extends State<FilesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _kBg,
-      body: Column(
-        children: [
-          _TopBar(
-            sessionRef: widget.sessionRef,
-            currentPath: _currentPath,
-            canGoUp: _canGoUp(),
-            onGoUp: _goUp,
-            onRefresh: () => _loadDirectory(_currentPath),
-          ),
-          Expanded(child: _buildBody()),
-        ],
+    return DarkPageScaffold(
+      header: _TopBar(
+        sessionRef: widget.sessionRef,
+        currentPath: _currentPath,
+        canGoUp: _canGoUp(),
+        onGoUp: _goUp,
+        onRefresh: () => _loadDirectory(_currentPath),
       ),
+      body: _buildBody(),
     );
   }
 
@@ -110,36 +98,24 @@ class _FilesPageState extends State<FilesPage> {
         child: SizedBox(
           width: 20,
           height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2, color: _kAccent),
+          child: CircularProgressIndicator(strokeWidth: 2, color: kDarkAccent),
         ),
       );
     }
     if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_error!, style: const TextStyle(color: _kTextMid, fontSize: 13)),
-            const SizedBox(height: 16),
-            OutlinedButton(
-              onPressed: () => _loadDirectory(_currentPath),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _kAccent,
-                side: const BorderSide(color: _kAccentDim),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-              ),
-              child: const Text('retry', style: TextStyle(fontFamily: 'monospace')),
-            ),
-          ],
-        ),
+      return DarkStateMessage(
+        icon: Icons.folder_off_rounded,
+        title: '目录读取失败',
+        detail: _error!,
+        actionLabel: '重试',
+        onAction: () => _loadDirectory(_currentPath),
       );
     }
     if (_entries.isEmpty) {
-      return const Center(
-        child: Text(
-          'empty directory',
-          style: TextStyle(fontFamily: 'monospace', fontSize: 13, color: _kTextLow),
-        ),
+      return const DarkStateMessage(
+        icon: Icons.folder_open_rounded,
+        title: '目录为空',
+        detail: '当前目录下还没有可浏览的文件或子目录。',
       );
     }
 
@@ -154,13 +130,15 @@ class _FilesPageState extends State<FilesPage> {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: sorted.length,
-      separatorBuilder: (_, __) => const Divider(
-        color: _kBorder, height: 1, thickness: 1, indent: 16, endIndent: 16,
+      separatorBuilder: (context, index) => const Divider(
+        color: kDarkBorder,
+        height: 1,
+        thickness: 1,
+        indent: 16,
+        endIndent: 16,
       ),
-      itemBuilder: (context, i) => _EntryTile(
-        entry: sorted[i],
-        onTap: () => _navigate(sorted[i]),
-      ),
+      itemBuilder: (context, i) =>
+          _EntryTile(entry: sorted[i], onTap: () => _navigate(sorted[i])),
     );
   }
 }
@@ -182,59 +160,42 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: _kSurface,
-        border: Border(bottom: BorderSide(color: _kBorder)),
+    return DarkPageHeader(
+      title: sessionRef,
+      subtitle: 'workspace explorer',
+      onBack: () => context.go('/sessions'),
+      leading: const Icon(
+        Icons.folder_open_rounded,
+        size: 16,
+        color: kDarkAccentDim,
       ),
-      padding: EdgeInsets.only(
-        top: MediaQuery.paddingOf(context).top + 6,
-        left: 8,
-        right: 8,
-        bottom: 8,
+      tabs: buildSessionTabs(
+        context: context,
+        sessionRef: sessionRef,
+        current: SessionPageSection.files,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: _kTextMid, size: 20),
-                onPressed: () => context.go('/sessions'),
-                tooltip: '返回会话列表',
-              ),
-              const Icon(Icons.folder_open_rounded, size: 14, color: _kAccentDim),
-              const SizedBox(width: 7),
-              Expanded(
-                child: Text(
-                  sessionRef,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                    color: _kTextMid,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (canGoUp)
-                _IconBtn(icon: Icons.arrow_upward_rounded, tooltip: '上一级', onTap: onGoUp),
-              _IconBtn(icon: Icons.refresh_rounded, tooltip: '刷新', onTap: onRefresh),
-            ],
+      actions: [
+        if (canGoUp)
+          DarkIconBtn(
+            icon: Icons.arrow_upward_rounded,
+            tooltip: '上一级',
+            onTap: onGoUp,
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 16, top: 2),
-            child: Text(
-              currentPath,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 11,
-                color: _kTextLow,
-                letterSpacing: 0.2,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+        DarkIconBtn(
+          icon: Icons.refresh_rounded,
+          tooltip: '刷新',
+          onTap: onRefresh,
+        ),
+      ],
+      bottom: Text(
+        currentPath,
+        style: const TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 11,
+          color: kDarkTextLow,
+          letterSpacing: 0.2,
+        ),
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -255,9 +216,11 @@ class _EntryTile extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              entry.isDirectory ? Icons.folder_rounded : _fileIcon(entry.language),
+              entry.isDirectory
+                  ? Icons.folder_rounded
+                  : _fileIcon(entry.language),
               size: 16,
-              color: entry.isDirectory ? _kAccentDim : _kTextLow,
+              color: entry.isDirectory ? kDarkAccentDim : kDarkTextLow,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -266,7 +229,7 @@ class _EntryTile extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 13,
-                  color: entry.isDirectory ? _kTextHigh : _kTextMid,
+                  color: entry.isDirectory ? kDarkTextHigh : kDarkTextMid,
                 ),
               ),
             ),
@@ -276,11 +239,15 @@ class _EntryTile extends StatelessWidget {
                 style: const TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 10,
-                  color: _kTextLow,
+                  color: kDarkTextLow,
                 ),
               ),
             if (entry.isDirectory)
-              const Icon(Icons.chevron_right_rounded, size: 16, color: _kTextLow),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: kDarkTextLow,
+              ),
           ],
         ),
       ),
@@ -289,8 +256,12 @@ class _EntryTile extends StatelessWidget {
 
   IconData _fileIcon(String? lang) {
     return switch (lang) {
-      'dart' || 'javascript' || 'typescript' || 'python' || 'go' || 'rust' =>
-        Icons.code_rounded,
+      'dart' ||
+      'javascript' ||
+      'typescript' ||
+      'python' ||
+      'go' ||
+      'rust' => Icons.code_rounded,
       'markdown' => Icons.article_outlined,
       'json' || 'yaml' || 'toml' => Icons.data_object_rounded,
       _ => Icons.insert_drive_file_outlined,
@@ -301,28 +272,5 @@ class _EntryTile extends StatelessWidget {
     if (bytes < 1024) return '${bytes}B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}K';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}M';
-  }
-}
-
-class _IconBtn extends StatelessWidget {
-  const _IconBtn({required this.icon, required this.tooltip, required this.onTap});
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Icon(icon, size: 18, color: _kTextMid),
-        ),
-      ),
-    );
   }
 }

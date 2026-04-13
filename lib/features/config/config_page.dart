@@ -2,17 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'package:manyoyo_app/app/theme.dart';
+import 'package:manyoyo_app/app/widgets.dart';
 import 'package:manyoyo_app/core/api_client.dart';
-
-const _kBg = Color(0xFF0F1A14);
-const _kSurface = Color(0xFF172217);
-const _kBorder = Color(0xFF2B4035);
-const _kAccent = Color(0xFF3DDB87);
-const _kAccentDim = Color(0xFF0B6E4F);
-const _kTextHigh = Color(0xFFE8F5EE);
-const _kTextMid = Color(0xFF7FA88E);
-const _kTextLow = Color(0xFF3D5446);
-const _kErrorText = Color(0xFFE06C5B);
 
 class ConfigPage extends StatefulWidget {
   const ConfigPage({super.key});
@@ -26,12 +18,14 @@ class _ConfigPageState extends State<ConfigPage> {
   bool _loading = true;
   bool _saving = false;
   bool _dirty = false;
+  bool _syncingText = false;
   String? _error;
   String? _saveError;
 
   @override
   void initState() {
     super.initState();
+    _controller.addListener(_handleTextChanged);
     _loadConfig();
   }
 
@@ -41,18 +35,31 @@ class _ConfigPageState extends State<ConfigPage> {
     super.dispose();
   }
 
+  void _handleTextChanged() {
+    if (_syncingText || _dirty) {
+      return;
+    }
+    if (mounted) {
+      setState(() => _dirty = true);
+    }
+  }
+
   Future<void> _loadConfig() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final client = context.read<ApiClient>();
       final resp = await client.get<Map<String, dynamic>>('/api/config');
-      final raw = resp.data?['raw'] as String?
-          ?? resp.data?['content'] as String?
-          ?? '';
+      final raw =
+          resp.data?['raw'] as String? ??
+          resp.data?['content'] as String? ??
+          '';
+      _syncingText = true;
       _controller.text = raw;
-      _controller.addListener(() {
-        if (!_dirty) setState(() => _dirty = true);
-      });
+      _syncingText = false;
+      _dirty = false;
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -61,10 +68,16 @@ class _ConfigPageState extends State<ConfigPage> {
   }
 
   Future<void> _saveConfig() async {
-    setState(() { _saving = true; _saveError = null; });
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
     try {
       final client = context.read<ApiClient>();
-      await client.put<dynamic>('/api/config', data: {'content': _controller.text});
+      await client.put<dynamic>(
+        '/api/config',
+        data: {'content': _controller.text},
+      );
       if (mounted) setState(() => _dirty = false);
     } catch (e) {
       if (mounted) setState(() => _saveError = e.toString());
@@ -75,11 +88,10 @@ class _ConfigPageState extends State<ConfigPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _kBg,
+    return DarkPageScaffold(
+      header: _buildTopBar(),
       body: Column(
         children: [
-          _buildTopBar(),
           if (_saveError != null)
             Container(
               width: double.infinity,
@@ -88,7 +100,7 @@ class _ConfigPageState extends State<ConfigPage> {
               child: Text(
                 _saveError!,
                 style: const TextStyle(
-                  color: _kErrorText,
+                  color: kDarkErrorText,
                   fontSize: 12,
                   fontFamily: 'monospace',
                 ),
@@ -101,62 +113,38 @@ class _ConfigPageState extends State<ConfigPage> {
   }
 
   Widget _buildTopBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: _kSurface,
-        border: Border(bottom: BorderSide(color: _kBorder)),
-      ),
-      padding: EdgeInsets.only(
-        top: MediaQuery.paddingOf(context).top + 6,
-        left: 8,
-        right: 12,
-        bottom: 8,
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: _kTextMid, size: 20),
-            onPressed: () => context.go('/sessions'),
-            tooltip: '返回',
-          ),
-          const Icon(Icons.tune_rounded, size: 14, color: _kAccentDim),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'config',
-              style: TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 13,
-                color: _kTextHigh,
-                fontWeight: FontWeight.w600,
-              ),
+    return DarkPageHeader(
+      title: 'config',
+      subtitle: 'manyoyo.json5 editor',
+      onBack: () => context.go('/sessions'),
+      leading: const Icon(Icons.tune_rounded, size: 16, color: kDarkAccentDim),
+      actions: [
+        if (_dirty)
+          Container(
+            width: 6,
+            height: 6,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: kDarkAccent,
             ),
           ),
-          if (_dirty)
-            Container(
-              width: 6,
-              height: 6,
-              margin: const EdgeInsets.only(right: 8),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: _kAccent,
-              ),
-            ),
-          FilledButton(
-            onPressed: (_saving || !_dirty || _loading) ? null : _saveConfig,
-            style: FilledButton.styleFrom(
-              backgroundColor: _kAccentDim,
-              foregroundColor: _kTextHigh,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-            ),
-            child: Text(
-              _saving ? '保存中...' : '保存',
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+        FilledButton(
+          onPressed: (_saving || !_dirty || _loading) ? null : _saveConfig,
+          style: FilledButton.styleFrom(
+            backgroundColor: kDarkAccentDim,
+            foregroundColor: kDarkTextHigh,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
             ),
           ),
-        ],
-      ),
+          child: Text(
+            _saving ? '保存中...' : '保存',
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+          ),
+        ),
+      ],
     );
   }
 
@@ -166,28 +154,17 @@ class _ConfigPageState extends State<ConfigPage> {
         child: SizedBox(
           width: 20,
           height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2, color: _kAccent),
+          child: CircularProgressIndicator(strokeWidth: 2, color: kDarkAccent),
         ),
       );
     }
     if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_error!, style: const TextStyle(color: _kTextMid, fontSize: 13)),
-            const SizedBox(height: 16),
-            OutlinedButton(
-              onPressed: _loadConfig,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _kAccent,
-                side: const BorderSide(color: _kAccentDim),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-              ),
-              child: const Text('retry', style: TextStyle(fontFamily: 'monospace')),
-            ),
-          ],
-        ),
+      return DarkStateMessage(
+        icon: Icons.settings_backup_restore_rounded,
+        title: '配置读取失败',
+        detail: _error!,
+        actionLabel: '重试',
+        onAction: _loadConfig,
       );
     }
 
@@ -202,12 +179,12 @@ class _ConfigPageState extends State<ConfigPage> {
             style: TextStyle(
               fontFamily: 'monospace',
               fontSize: 11,
-              color: _kTextLow,
+              color: kDarkTextLow,
               height: 1.4,
             ),
           ),
         ),
-        const Divider(color: _kBorder, height: 1),
+        const Divider(color: kDarkBorder, height: 1),
         Expanded(
           child: TextField(
             controller: _controller,
@@ -216,12 +193,12 @@ class _ConfigPageState extends State<ConfigPage> {
             style: const TextStyle(
               fontFamily: 'monospace',
               fontSize: 13,
-              color: _kTextHigh,
+              color: kDarkTextHigh,
               height: 1.55,
             ),
             decoration: const InputDecoration(
               filled: true,
-              fillColor: _kBg,
+              fillColor: kDarkBg,
               border: InputBorder.none,
               contentPadding: EdgeInsets.all(16),
             ),

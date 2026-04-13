@@ -3,22 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'package:manyoyo_app/app/theme.dart';
+import 'package:manyoyo_app/app/widgets.dart';
 import 'package:manyoyo_app/core/api_client.dart';
 import 'package:manyoyo_app/core/auth_notifier.dart';
 import 'package:manyoyo_app/features/sessions/sessions_notifier.dart';
 import 'package:manyoyo_app/models/session.dart';
 
-// ─── palette (extends theme) ─────────────────────────────────────────────────
-const _kBg = Color(0xFF0F1A14);          // deep forest black
-const _kSurface = Color(0xFF172217);     // container card
-const _kBorder = Color(0xFF2B4035);      // subtle green-tinted border
-const _kAccent = Color(0xFF3DDB87);      // bright terminal green
-const _kAccentDim = Color(0xFF0B6E4F);   // muted accent
-const _kTextHigh = Color(0xFFE8F5EE);    // high-emphasis text
-const _kTextMid = Color(0xFF7FA88E);     // mid-emphasis
-const _kTextLow = Color(0xFF3D5446);     // low-emphasis / label
+// ─── page-specific colors ────────────────────────────────────────────────────
 const _kRunning = Color(0xFF3DDB87);
-const _kIdle = Color(0xFF2B4035);
 const _kHistoryOnly = Color(0xFF1C2D24);
 
 class SessionsPage extends StatefulWidget {
@@ -59,7 +51,7 @@ class _SessionsScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: kDarkBg,
       body: Column(
         children: [
           _buildTopBar(context),
@@ -71,65 +63,48 @@ class _SessionsScaffold extends StatelessWidget {
   }
 
   Widget _buildTopBar(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: _kSurface,
-        border: Border(bottom: BorderSide(color: _kBorder)),
+    return DarkPageHeader(
+      title: 'MANYOYO',
+      subtitle: 'agent sessions',
+      leading: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: kDarkAccentDim),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: const Text(
+          'MX',
+          style: TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 11,
+            letterSpacing: 2,
+            color: kDarkAccent,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
-      padding: EdgeInsets.only(
-        top: MediaQuery.paddingOf(context).top + 8,
-        left: 20,
-        right: 16,
-        bottom: 12,
-      ),
-      child: Row(
-        children: [
-          // Logo / wordmark
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              border: Border.all(color: _kAccentDim),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: const Text(
-              'MANYOYO',
-              style: TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 11,
-                letterSpacing: 2,
-                color: _kAccent,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Text(
-            'agent sessions',
-            style: TextStyle(
-              fontSize: 13,
-              color: _kTextMid,
-              letterSpacing: 0.4,
-            ),
-          ),
-          const Spacer(),
-          // Config button
-          _IconBtn(
-            icon: Icons.tune_rounded,
-            tooltip: '配置',
-            onTap: () => context.go('/config'),
-          ),
-          const SizedBox(width: 4),
-          // Logout
-          _IconBtn(
-            icon: Icons.power_settings_new_rounded,
-            tooltip: '退出登录',
-            onTap: () async {
-              context.read<AuthNotifier>().logout();
-              context.go('/login');
-            },
-          ),
-        ],
-      ),
+      actions: [
+        DarkIconBtn(
+          icon: Icons.tune_rounded,
+          tooltip: '配置',
+          onTap: () => context.go('/config'),
+          iconSize: 20,
+          padding: 8,
+          borderRadius: 8,
+        ),
+        const SizedBox(width: 4),
+        DarkIconBtn(
+          icon: Icons.power_settings_new_rounded,
+          tooltip: '退出登录',
+          onTap: () async {
+            context.read<AuthNotifier>().logout();
+            context.go('/login');
+          },
+          iconSize: 20,
+          padding: 8,
+          borderRadius: 8,
+        ),
+      ],
     );
   }
 }
@@ -148,31 +123,40 @@ class _SessionsList extends StatelessWidget {
               height: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: _kAccent,
+                color: kDarkAccent,
               ),
             ),
           );
         }
 
         if (notifier.error != null && notifier.containers.isEmpty) {
-          return _ErrorState(
-            message: notifier.error!,
-            onRetry: notifier.loadSessions,
+          return DarkStateMessage(
+            icon: Icons.cloud_off_rounded,
+            title: '会话列表加载失败',
+            detail: notifier.error!,
+            actionLabel: '重试',
+            onAction: notifier.loadSessions,
           );
         }
 
         if (notifier.containers.isEmpty) {
-          return _EmptyState(onRefresh: notifier.loadSessions);
+          return DarkStateMessage(
+            icon: Icons.inbox_rounded,
+            title: '还没有会话',
+            detail: '先创建一个新的容器会话，再进入对话、终端或文件视图。',
+            actionLabel: '刷新',
+            onAction: notifier.loadSessions,
+          );
         }
 
         return RefreshIndicator(
-          color: _kAccent,
-          backgroundColor: _kSurface,
+          color: kDarkAccent,
+          backgroundColor: kDarkSurface,
           onRefresh: notifier.loadSessions,
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
             itemCount: notifier.containers.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, i) =>
                 _ContainerCard(group: notifier.containers[i]),
           ),
@@ -191,9 +175,9 @@ class _ContainerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: _kSurface,
+        color: kDarkSurface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _kBorder),
+        border: Border.all(color: kDarkBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,18 +187,14 @@ class _ContainerCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
             child: Row(
               children: [
-                const Icon(
-                  Icons.inbox_rounded,
-                  size: 14,
-                  color: _kTextLow,
-                ),
+                const Icon(Icons.inbox_rounded, size: 14, color: kDarkTextLow),
                 const SizedBox(width: 7),
                 Text(
                   group.containerName,
                   style: const TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 13,
-                    color: _kTextHigh,
+                    color: kDarkTextHigh,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,
                   ),
@@ -224,7 +204,7 @@ class _ContainerCard extends StatelessWidget {
                   '${group.agents.length} agent${group.agents.length == 1 ? '' : 's'}',
                   style: const TextStyle(
                     fontSize: 11,
-                    color: _kTextLow,
+                    color: kDarkTextLow,
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -232,12 +212,10 @@ class _ContainerCard extends StatelessWidget {
             ),
           ),
           if (group.agents.isNotEmpty) ...[
-            const Divider(color: _kBorder, height: 1, thickness: 1),
+            const Divider(color: kDarkBorder, height: 1, thickness: 1),
             ...group.agents.map(
-              (agent) => _AgentRow(
-                agent: agent,
-                isLast: agent == group.agents.last,
-              ),
+              (agent) =>
+                  _AgentRow(agent: agent, isLast: agent == group.agents.last),
             ),
           ],
         ],
@@ -254,8 +232,8 @@ class _AgentRow extends StatelessWidget {
 
   Color get _statusColor {
     if (agent.running) return _kRunning;
-    if (agent.isHistoryOnly) return _kTextLow;
-    return _kAccentDim;
+    if (agent.isHistoryOnly) return kDarkTextLow;
+    return kDarkAccentDim;
   }
 
   String get _statusLabel {
@@ -308,7 +286,7 @@ class _AgentRow extends StatelessWidget {
                         style: const TextStyle(
                           fontFamily: 'monospace',
                           fontSize: 13,
-                          color: _kTextHigh,
+                          color: kDarkTextHigh,
                           letterSpacing: 0.2,
                         ),
                       ),
@@ -321,7 +299,7 @@ class _AgentRow extends StatelessWidget {
                               const SizedBox(width: 4),
                               _Badge(
                                 label: agent.contextMode!,
-                                color: _kTextLow,
+                                color: kDarkTextLow,
                               ),
                             ],
                           ],
@@ -345,28 +323,33 @@ class _AgentRow extends StatelessWidget {
                 ),
                 // Action buttons
                 if (!agent.isHistoryOnly) ...[
-                  _SmallIconBtn(
+                  DarkIconBtn(
                     icon: Icons.terminal_rounded,
                     tooltip: '终端',
                     onTap: () => context.go(
                       '/sessions/${Uri.encodeComponent(agent.sessionRef)}/term',
                     ),
+                    iconSize: 16,
+                    padding: 6,
                   ),
                   const SizedBox(width: 2),
                 ],
-                _SmallIconBtn(
+                DarkIconBtn(
                   icon: Icons.chat_bubble_outline_rounded,
                   tooltip: 'Agent 对话',
                   onTap: () => context.go(
                     '/sessions/${Uri.encodeComponent(agent.sessionRef)}/chat',
                   ),
+                  iconSize: 16,
+                  padding: 6,
                 ),
                 const SizedBox(width: 2),
                 _DeleteBtn(sessionRef: agent.sessionRef),
               ],
             ),
           ),
-          if (!isLast) const Divider(color: _kBorder, height: 1, thickness: 1),
+          if (!isLast)
+            const Divider(color: kDarkBorder, height: 1, thickness: 1),
         ],
       ),
     );
@@ -374,7 +357,7 @@ class _AgentRow extends StatelessWidget {
 }
 
 class _Badge extends StatelessWidget {
-  const _Badge({required this.label, this.color = _kAccentDim});
+  const _Badge({required this.label, this.color = kDarkAccentDim});
 
   final String label;
   final Color color;
@@ -393,35 +376,8 @@ class _Badge extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'monospace',
           fontSize: 9,
-          color: color == _kTextLow ? _kTextMid : _kAccent,
+          color: color == kDarkTextLow ? kDarkTextMid : kDarkAccent,
           letterSpacing: 0.3,
-        ),
-      ),
-    );
-  }
-}
-
-class _SmallIconBtn extends StatelessWidget {
-  const _SmallIconBtn({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Icon(icon, size: 16, color: _kTextMid),
         ),
       ),
     );
@@ -435,20 +391,12 @@ class _DeleteBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: '删除',
-      child: InkWell(
-        onTap: () => _confirmDelete(context),
-        borderRadius: BorderRadius.circular(6),
-        child: const Padding(
-          padding: EdgeInsets.all(6),
-          child: Icon(
-            Icons.delete_outline_rounded,
-            size: 16,
-            color: _kTextLow,
-          ),
-        ),
-      ),
+    return DarkIconBtn(
+      icon: Icons.delete_outline_rounded,
+      tooltip: '删除',
+      onTap: () => _confirmDelete(context),
+      iconSize: 16,
+      padding: 6,
     );
   }
 
@@ -456,30 +404,31 @@ class _DeleteBtn extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _kSurface,
+        backgroundColor: kDarkSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: _kBorder),
+          side: const BorderSide(color: kDarkBorder),
         ),
         title: const Text(
           '删除会话',
-          style: TextStyle(color: _kTextHigh, fontSize: 16),
+          style: TextStyle(color: kDarkTextHigh, fontSize: 16),
         ),
         content: Text(
           '确认删除 $sessionRef？此操作会停止并删除对应容器。',
-          style: const TextStyle(color: _kTextMid, fontSize: 14, height: 1.5),
+          style: const TextStyle(
+            color: kDarkTextMid,
+            fontSize: 14,
+            height: 1.5,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消', style: TextStyle(color: _kTextMid)),
+            child: const Text('取消', style: TextStyle(color: kDarkTextMid)),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              '删除',
-              style: TextStyle(color: Color(0xFFE06C5B)),
-            ),
+            child: const Text('删除', style: TextStyle(color: Color(0xFFE06C5B))),
           ),
         ],
       ),
@@ -495,8 +444,8 @@ class _NewSessionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton.extended(
       onPressed: () => _showCreateDialog(context),
-      backgroundColor: _kAccentDim,
-      foregroundColor: _kTextHigh,
+      backgroundColor: kDarkAccentDim,
+      foregroundColor: kDarkTextHigh,
       icon: const Icon(Icons.add_rounded),
       label: const Text(
         'New Session',
@@ -514,10 +463,10 @@ class _NewSessionButton extends StatelessWidget {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _kSurface,
+      backgroundColor: kDarkSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        side: BorderSide(color: _kBorder),
+        side: BorderSide(color: kDarkBorder),
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
@@ -535,7 +484,7 @@ class _NewSessionButton extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 16,
-                color: _kTextHigh,
+                color: kDarkTextHigh,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
               ),
@@ -558,8 +507,8 @@ class _NewSessionButton extends StatelessWidget {
               width: double.infinity,
               child: FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: _kAccentDim,
-                  foregroundColor: _kTextHigh,
+                  backgroundColor: kDarkAccentDim,
+                  foregroundColor: kDarkTextHigh,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -618,7 +567,7 @@ class _DarkTextField extends StatelessWidget {
           label,
           style: const TextStyle(
             fontSize: 11,
-            color: _kTextLow,
+            color: kDarkTextLow,
             letterSpacing: 0.5,
             fontFamily: 'monospace',
           ),
@@ -630,12 +579,12 @@ class _DarkTextField extends StatelessWidget {
           style: const TextStyle(
             fontFamily: 'monospace',
             fontSize: 14,
-            color: _kTextHigh,
+            color: kDarkTextHigh,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: _kTextLow.withValues(alpha: 0.7),
+              color: kDarkTextLow.withValues(alpha: 0.7),
               fontFamily: 'monospace',
             ),
             filled: true,
@@ -646,153 +595,19 @@ class _DarkTextField extends StatelessWidget {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: _kBorder),
+              borderSide: const BorderSide(color: kDarkBorder),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: _kBorder),
+              borderSide: const BorderSide(color: kDarkBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: _kAccentDim, width: 1.5),
+              borderSide: const BorderSide(color: kDarkAccentDim, width: 1.5),
             ),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _IconBtn extends StatelessWidget {
-  const _IconBtn({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Icon(icon, size: 20, color: _kTextMid),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onRefresh});
-
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            '[ ]',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 36,
-              color: _kTextLow,
-              letterSpacing: 4,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'no sessions',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 13,
-              color: _kTextLow,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 24),
-          OutlinedButton(
-            onPressed: onRefresh,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: _kTextMid,
-              side: const BorderSide(color: _kBorder),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
-            child: const Text(
-              'refresh',
-              style: TextStyle(fontFamily: 'monospace', letterSpacing: 0.5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'ERR',
-              style: TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 28,
-                color: Color(0xFFE06C5B),
-                letterSpacing: 4,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13,
-                color: _kTextMid,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 24),
-            OutlinedButton(
-              onPressed: onRetry,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _kAccent,
-                side: const BorderSide(color: _kAccentDim),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              child: const Text(
-                'retry',
-                style: TextStyle(fontFamily: 'monospace', letterSpacing: 0.5),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

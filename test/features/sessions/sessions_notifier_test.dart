@@ -1,41 +1,17 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'package:manyoyo_app/core/api_client.dart';
 import 'package:manyoyo_app/features/sessions/sessions_notifier.dart';
-import 'package:manyoyo_app/models/session.dart';
+
+import '../../helpers/stub_adapter.dart';
 
 @GenerateMocks([CookieJar])
 import 'sessions_notifier_test.mocks.dart';
-
-class _StubAdapter implements HttpClientAdapter {
-  _StubAdapter({required this.responseBody, this.statusCode = 200});
-
-  final String responseBody;
-  final int statusCode;
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<Uint8List>? requestStream,
-    Future<void>? cancelFuture,
-  ) async {
-    return ResponseBody.fromString(
-      responseBody,
-      statusCode,
-      headers: {'content-type': ['application/json']},
-    );
-  }
-
-  @override
-  void close({bool force = false}) {}
-}
 
 ApiClient makeClient(String responseBody, {int status = 200}) {
   final cookieJar = MockCookieJar();
@@ -46,8 +22,13 @@ ApiClient makeClient(String responseBody, {int status = 200}) {
     baseUrl: 'http://127.0.0.1:3000',
     cookieJar: cookieJar,
   );
-  client.testDio.httpClientAdapter =
-      _StubAdapter(responseBody: responseBody, statusCode: status);
+  client.testDio.httpClientAdapter = StubAdapter(
+    statusCode: status,
+    body: responseBody,
+    headers: {
+      'content-type': ['application/json'],
+    },
+  );
   return client;
 }
 

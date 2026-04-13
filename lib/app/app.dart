@@ -63,28 +63,28 @@ class _ManyoyoAppState extends State<ManyoyoApp> {
       return null;
     },
     routes: [
-      GoRoute(path: '/setup', builder: (_, __) => const SetupPage()),
-      GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
-      GoRoute(path: '/sessions', builder: (_, __) => const SessionsPage()),
+      GoRoute(path: '/setup', builder: (context, state) => const SetupPage()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+      GoRoute(
+        path: '/sessions',
+        builder: (context, state) => const SessionsPage(),
+      ),
       GoRoute(
         path: '/sessions/:ref/chat',
-        builder: (_, state) => ChatPage(
-          sessionRef: state.pathParameters['ref']!,
-        ),
+        builder: (_, state) =>
+            ChatPage(sessionRef: state.pathParameters['ref']!),
       ),
       GoRoute(
         path: '/sessions/:ref/term',
-        builder: (_, state) => TerminalPage(
-          sessionRef: state.pathParameters['ref']!,
-        ),
+        builder: (_, state) =>
+            TerminalPage(sessionRef: state.pathParameters['ref']!),
       ),
       GoRoute(
         path: '/sessions/:ref/files',
-        builder: (_, state) => FilesPage(
-          sessionRef: state.pathParameters['ref']!,
-        ),
+        builder: (_, state) =>
+            FilesPage(sessionRef: state.pathParameters['ref']!),
       ),
-      GoRoute(path: '/config', builder: (_, __) => const ConfigPage()),
+      GoRoute(path: '/config', builder: (context, state) => const ConfigPage()),
     ],
     initialLocation: '/setup',
   );

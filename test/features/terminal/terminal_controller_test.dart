@@ -39,7 +39,7 @@ void main() {
 
     await controller.connectWith(socket, cols: 80, rows: 24);
 
-    final resizeMsg = sent(socket, 'resize');
+    final resizeMsg = _sent(socket, 'resize');
     expect(resizeMsg, isNotNull);
     expect(resizeMsg!['cols'], equals(80));
     expect(resizeMsg['rows'], equals(24));
@@ -53,9 +53,7 @@ void main() {
     final socket = _FakeSocket();
 
     await controller.connectWith(socket, cols: 80, rows: 24);
-    socket.inject(
-      jsonEncode({'type': 'output', 'data': 'hello\r\n'}),
-    );
+    socket.inject(jsonEncode({'type': 'output', 'data': 'hello\r\n'}));
     // Allow stream listener to fire.
     await Future<void>.delayed(Duration.zero);
 
@@ -71,7 +69,7 @@ void main() {
     await controller.connectWith(socket, cols: 80, rows: 24);
     controller.sendInput('ls\n');
 
-    final inputMsg = sent(socket, 'input');
+    final inputMsg = _sent(socket, 'input');
     expect(inputMsg, isNotNull);
     expect(inputMsg!['data'], equals('ls\n'));
 
@@ -87,7 +85,7 @@ void main() {
     socket.sent.clear();
     controller.resize(120, 36);
 
-    final resizeMsg = sent(socket, 'resize');
+    final resizeMsg = _sent(socket, 'resize');
     expect(resizeMsg, isNotNull);
     expect(resizeMsg!['cols'], equals(120));
     expect(resizeMsg['rows'], equals(36));
@@ -107,7 +105,7 @@ void main() {
   });
 }
 
-Map<String, dynamic>? sent(_FakeSocket socket, String type) {
+Map<String, dynamic>? _sent(_FakeSocket socket, String type) {
   for (final raw in socket.sent) {
     try {
       final msg = jsonDecode(raw as String) as Map<String, dynamic>;

@@ -64,6 +64,8 @@ class TerminalController extends ChangeNotifier {
     required int cols,
     required int rows,
   }) async {
+    await _sub?.cancel();
+    await _socket?.close();
     _socket = socket;
     _isConnected = true;
 
@@ -117,6 +119,7 @@ class TerminalController extends ChangeNotifier {
 
   Future<void> disconnect() async {
     _sendJson({'type': 'close'});
+    await _sub?.cancel();
     await _socket?.close();
     _onDisconnected();
   }
