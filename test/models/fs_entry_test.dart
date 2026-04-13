@@ -31,6 +31,15 @@ void main() {
     expect(entry.size, isNull);
   });
 
+  test('FsEntry.fromJson also supports kind field', () {
+    final entry = FsEntry.fromJson({
+      'name': 'docs',
+      'path': '/workspace/docs',
+      'kind': 'directory',
+    });
+    expect(entry.isDirectory, isTrue);
+  });
+
   test('FsEntry.fromJson handles missing optional fields', () {
     final entry = FsEntry.fromJson({
       'name': 'README',

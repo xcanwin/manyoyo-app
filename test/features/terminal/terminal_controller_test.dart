@@ -103,6 +103,18 @@ void main() {
     expect(socket.closed, isTrue);
     expect(controller.isConnected, isFalse);
   });
+
+  test('disconnect remains safe when controller is disposed immediately', () async {
+    final controller = TerminalController();
+    final socket = _FakeSocket();
+
+    await controller.connectWith(socket, cols: 80, rows: 24);
+    final pendingDisconnect = controller.disconnect();
+    controller.dispose();
+    await pendingDisconnect;
+
+    expect(socket.closed, isTrue);
+  });
 }
 
 Map<String, dynamic>? _sent(_FakeSocket socket, String type) {

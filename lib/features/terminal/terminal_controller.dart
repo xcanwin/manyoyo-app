@@ -39,6 +39,8 @@ class TerminalController extends ChangeNotifier {
   final StringBuffer _outputBuffer = StringBuffer();
 
   bool _isConnected = false;
+  bool _isDisposed = false;
+  bool _isDisconnecting = false;
 
   Terminal get terminal => _terminal;
   bool get isConnected => _isConnected;
@@ -64,6 +66,10 @@ class TerminalController extends ChangeNotifier {
     required int cols,
     required int rows,
   }) async {
+    if (_isDisposed) {
+      await socket.close();
+      return;
+    }
     await _sub?.cancel();
     await _socket?.close();
     _socket = socket;
@@ -80,7 +86,7 @@ class TerminalController extends ChangeNotifier {
 
     // Send initial resize
     _sendJson({'type': 'resize', 'cols': cols, 'rows': rows});
-    notifyListeners();
+    _notifySafely();
   }
 
   void _onMessage(dynamic raw) {
@@ -91,9 +97,9 @@ class TerminalController extends ChangeNotifier {
         final data = msg['data'] as String? ?? '';
         _outputBuffer.write(data);
         _terminal.write(data);
-        notifyListeners();
+        _notifySafely();
       } else if (type == 'status') {
-        notifyListeners();
+        _notifySafely();
       }
     } catch (_) {}
   }
@@ -102,7 +108,8 @@ class TerminalController extends ChangeNotifier {
     _isConnected = false;
     _sub = null;
     _socket = null;
-    notifyListeners();
+    _isDisconnecting = false;
+    _notifySafely();
   }
 
   void sendInput(String data) {
@@ -118,9 +125,36 @@ class TerminalController extends ChangeNotifier {
   }
 
   Future<void> disconnect() async {
+    if (_isDisposed || _isDisconnecting) {
+      return;
+    }
+    _isDisconnecting = true;
+    final sub = _sub;
+    final socket = _socket;
     _sendJson({'type': 'close'});
-    await _sub?.cancel();
-    await _socket?.close();
-    _onDisconnected();
+    _sub = null;
+    _socket = null;
+    _isConnected = false;
+    _notifySafely();
+    await sub?.cancel();
+    await socket?.close();
+    _isDisconnecting = false;
+  }
+
+  void _notifySafely() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _terminal.onOutput = null;
+    unawaited(_sub?.cancel());
+    unawaited(_socket?.close());
+    _sub = null;
+    _socket = null;
+    super.dispose();
   }
 }

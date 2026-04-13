@@ -30,7 +30,40 @@ class _FilesPageState extends State<FilesPage> {
   void initState() {
     super.initState();
     _client = context.read<ApiClient>();
-    _loadDirectory(_currentPath);
+    _loadInitialDirectory();
+  }
+
+  Future<void> _loadInitialDirectory() async {
+    final rootPath = await _resolveContainerPath();
+    if (!mounted) return;
+    _pathStack
+      ..clear()
+      ..add(rootPath);
+    await _loadDirectory(rootPath);
+  }
+
+  Future<String> _resolveContainerPath() async {
+    try {
+      final ref = Uri.encodeComponent(widget.sessionRef);
+      final resp = await _client.get<Map<String, dynamic>>(
+        '/api/sessions/$ref/detail',
+      );
+      final detail = resp.data?['detail'];
+      if (detail is Map<String, dynamic>) {
+        final applied = detail['applied'];
+        final detailPath = detail['containerPath'] as String?;
+        final appliedPath = applied is Map<String, dynamic>
+            ? applied['containerPath'] as String?
+            : null;
+        if (detailPath != null && detailPath.trim().isNotEmpty) {
+          return detailPath.trim();
+        }
+        if (appliedPath != null && appliedPath.trim().isNotEmpty) {
+          return appliedPath.trim();
+        }
+      }
+    } catch (_) {}
+    return '/workspace';
   }
 
   Future<void> _loadDirectory(String path) async {

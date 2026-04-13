@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +40,7 @@ class _TerminalPageState extends State<TerminalPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _controller.disconnect();
+    unawaited(_controller.disconnect());
     _controller.dispose();
     super.dispose();
   }

@@ -16,10 +16,11 @@ class FsEntry {
   final String? language;
 
   factory FsEntry.fromJson(Map<String, dynamic> json) {
+    final kind = (json['kind'] as String?) ?? (json['type'] as String?);
     return FsEntry(
       name: json['name'] as String,
       path: json['path'] as String,
-      isDirectory: (json['type'] as String?) == 'directory',
+      isDirectory: kind == 'directory',
       size: json['size'] as int?,
       editable: (json['editable'] as bool?) ?? false,
       language: json['language'] as String?,
