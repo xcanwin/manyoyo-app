@@ -95,7 +95,7 @@ class _ConfigPageState extends State<ConfigPage> {
           if (_saveError != null)
             Container(
               width: double.infinity,
-              color: const Color(0xFF2D1A18),
+              color: kErrorBg,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
                 _saveError!,
@@ -117,7 +117,7 @@ class _ConfigPageState extends State<ConfigPage> {
       title: 'config',
       subtitle: 'manyoyo.json5 editor',
       onBack: () => context.go('/sessions'),
-      leading: const Icon(Icons.tune_rounded, size: 16, color: kDarkAccentDim),
+      leading: const Icon(Icons.tune_rounded, size: 16, color: kDarkAccent),
       actions: [
         if (_dirty)
           Container(
@@ -132,11 +132,11 @@ class _ConfigPageState extends State<ConfigPage> {
         FilledButton(
           onPressed: (_saving || !_dirty || _loading) ? null : _saveConfig,
           style: FilledButton.styleFrom(
-            backgroundColor: kDarkAccentDim,
-            foregroundColor: kDarkTextHigh,
+            backgroundColor: kDarkAccent,
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
           child: Text(
@@ -173,7 +173,7 @@ class _ConfigPageState extends State<ConfigPage> {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          color: const Color(0xFF0F1A14),
+          color: kMutedPanel,
           child: const Text(
             '// JSON5 配置文件 — 敏感字段用 ***HIDDEN_SECRET*** 占位，保存时不会覆盖原始值',
             style: TextStyle(
@@ -198,7 +198,7 @@ class _ConfigPageState extends State<ConfigPage> {
             ),
             decoration: const InputDecoration(
               filled: true,
-              fillColor: kDarkBg,
+              fillColor: kEditorBg,
               border: InputBorder.none,
               contentPadding: EdgeInsets.all(16),
             ),

@@ -8,8 +8,7 @@ import 'package:manyoyo_app/app/widgets.dart';
 import 'package:manyoyo_app/core/api_client.dart';
 import 'package:manyoyo_app/features/terminal/terminal_controller.dart';
 
-// Terminal uses a slightly darker background than other dark pages.
-const _kBg = Color(0xFF0D1511);
+const _kTerminalPanel = Color(0xFF102033);
 
 class TerminalPage extends StatefulWidget {
   const TerminalPage({super.key, required this.sessionRef});
@@ -83,7 +82,6 @@ class _TerminalPageState extends State<TerminalPage>
     return ChangeNotifierProvider<TerminalController>.value(
       value: _controller,
       child: DarkPageScaffold(
-        backgroundColor: _kBg,
         header: _TopBar(sessionRef: widget.sessionRef, onReconnect: _connect),
         body: _buildBody(),
       ),
@@ -145,11 +143,7 @@ class _TopBar extends StatelessWidget {
       title: sessionRef,
       subtitle: 'live terminal',
       onBack: () => context.go('/sessions'),
-      leading: const Icon(
-        Icons.terminal_rounded,
-        size: 16,
-        color: kDarkAccentDim,
-      ),
+      leading: const Icon(Icons.terminal_rounded, size: 16, color: kDarkAccent),
       tabs: buildSessionTabs(
         context: context,
         sessionRef: sessionRef,
@@ -201,36 +195,57 @@ class _TerminalView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
-      child: TerminalView(
-        controller.terminal,
-        theme: const TerminalTheme(
-          cursor: Color(0xFF3DDB87),
-          selection: Color(0x440B6E4F),
-          foreground: Color(0xFFE8F5EE),
-          background: Color(0xFF0D1511),
-          black: Color(0xFF0D1511),
-          red: Color(0xFFE06C5B),
-          green: Color(0xFF3DDB87),
-          yellow: Color(0xFFE5C07B),
-          blue: Color(0xFF61AFEF),
-          magenta: Color(0xFFC678DD),
-          cyan: Color(0xFF56B6C2),
-          white: Color(0xFFABB2BF),
-          brightBlack: Color(0xFF3D5446),
-          brightRed: Color(0xFFE06C5B),
-          brightGreen: Color(0xFF98C379),
-          brightYellow: Color(0xFFE5C07B),
-          brightBlue: Color(0xFF61AFEF),
-          brightMagenta: Color(0xFFC678DD),
-          brightCyan: Color(0xFF56B6C2),
-          brightWhite: Color(0xFFE8F5EE),
-          searchHitBackground: Color(0xFF0B6E4F),
-          searchHitBackgroundCurrent: Color(0xFF3DDB87),
-          searchHitForeground: Color(0xFF0D1511),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+        decoration: BoxDecoration(
+          color: _kTerminalPanel,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFF29405A)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A243956),
+              blurRadius: 24,
+              offset: Offset(0, 16),
+            ),
+          ],
         ),
-        textStyle: const TerminalStyle(fontSize: 13.5, fontFamily: 'monospace'),
-        padding: const EdgeInsets.all(8),
-        autofocus: true,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: TerminalView(
+            controller.terminal,
+            theme: const TerminalTheme(
+              cursor: Color(0xFF9DDBFF),
+              selection: Color(0x66356EA5),
+              foreground: Color(0xFFEFF6FF),
+              background: _kTerminalPanel,
+              black: _kTerminalPanel,
+              red: Color(0xFFFF8D8D),
+              green: Color(0xFF8DE0A6),
+              yellow: Color(0xFFFFD58A),
+              blue: Color(0xFF8FC5FF),
+              magenta: Color(0xFFE0B3FF),
+              cyan: Color(0xFF7FE0E3),
+              white: Color(0xFFD8E6F7),
+              brightBlack: Color(0xFF5F7896),
+              brightRed: Color(0xFFFFA6A6),
+              brightGreen: Color(0xFFAEF1BF),
+              brightYellow: Color(0xFFFFE3A6),
+              brightBlue: Color(0xFFB1D6FF),
+              brightMagenta: Color(0xFFEBC6FF),
+              brightCyan: Color(0xFFA4F4F0),
+              brightWhite: Color(0xFFF8FBFF),
+              searchHitBackground: Color(0xFF355C8E),
+              searchHitBackgroundCurrent: Color(0xFF6EA7FF),
+              searchHitForeground: Color(0xFFF8FBFF),
+            ),
+            textStyle: const TerminalStyle(
+              fontSize: 13.5,
+              fontFamily: 'monospace',
+            ),
+            padding: const EdgeInsets.all(12),
+            autofocus: true,
+          ),
+        ),
       ),
     );
   }

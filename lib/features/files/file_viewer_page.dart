@@ -100,9 +100,9 @@ class _FileViewerPageState extends State<FileViewerPage> {
     final discard = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: kDarkSurface,
+        backgroundColor: kGlassFillStrong,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: kDarkBorder),
         ),
         title: const Text(
@@ -144,7 +144,7 @@ class _FileViewerPageState extends State<FileViewerPage> {
             if (_saveError != null)
               Container(
                 width: double.infinity,
-                color: const Color(0xFF2D1A18),
+                color: kErrorBg,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
@@ -178,7 +178,7 @@ class _FileViewerPageState extends State<FileViewerPage> {
       leading: const Icon(
         Icons.description_outlined,
         size: 16,
-        color: kDarkAccentDim,
+        color: kDarkAccent,
       ),
       actions: [
         if (_dirty)
@@ -195,11 +195,11 @@ class _FileViewerPageState extends State<FileViewerPage> {
           FilledButton(
             onPressed: (_saving || !_dirty) ? null : _saveFile,
             style: FilledButton.styleFrom(
-              backgroundColor: kDarkAccentDim,
-              foregroundColor: kDarkTextHigh,
+              backgroundColor: kDarkAccent,
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(14),
               ),
             ),
             child: Text(
@@ -216,7 +216,7 @@ class _FileViewerPageState extends State<FileViewerPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('已复制到剪贴板'),
-                  backgroundColor: kDarkAccentDim,
+                  backgroundColor: kDarkAccent,
                   duration: Duration(seconds: 2),
                 ),
               );
@@ -259,7 +259,7 @@ class _FileViewerPageState extends State<FileViewerPage> {
       ),
       decoration: InputDecoration(
         filled: true,
-        fillColor: kDarkBg,
+        fillColor: kEditorBg,
         border: InputBorder.none,
         contentPadding: const EdgeInsets.all(16),
         hintText: widget.entry.editable ? null : '（只读文件）',

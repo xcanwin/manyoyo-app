@@ -10,8 +10,8 @@ import 'package:manyoyo_app/features/sessions/sessions_notifier.dart';
 import 'package:manyoyo_app/models/session.dart';
 
 // ─── page-specific colors ────────────────────────────────────────────────────
-const _kRunning = Color(0xFF3DDB87);
-const _kHistoryOnly = Color(0xFF1C2D24);
+const _kRunning = Color(0xFFD7E8DA);
+const _kHistoryOnly = Color(0xFFE7EBF2);
 
 class SessionsPage extends StatefulWidget {
   const SessionsPage({super.key});
@@ -151,7 +151,7 @@ class _SessionsList extends StatelessWidget {
 
         return RefreshIndicator(
           color: kDarkAccent,
-          backgroundColor: kDarkSurface,
+          backgroundColor: Colors.white.withValues(alpha: 0.92),
           onRefresh: notifier.loadSessions,
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -175,7 +175,7 @@ class _ContainerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: kDarkSurface,
+        color: kGlassFillSoft,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: kDarkBorder),
       ),
@@ -243,9 +243,9 @@ class _AgentRow extends StatelessWidget {
   }
 
   Color get _rowBg {
-    if (agent.running) return const Color(0xFF1C3228);
+    if (agent.running) return _kRunning;
     if (agent.isHistoryOnly) return _kHistoryOnly;
-    return Colors.transparent;
+    return Colors.white.withValues(alpha: 0.36);
   }
 
   @override
@@ -404,9 +404,9 @@ class _DeleteBtn extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: kDarkSurface,
+        backgroundColor: kGlassFillStrong,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: kDarkBorder),
         ),
         title: const Text(
@@ -428,7 +428,7 @@ class _DeleteBtn extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('删除', style: TextStyle(color: Color(0xFFE06C5B))),
+            child: const Text('删除', style: TextStyle(color: kDarkErrorText)),
           ),
         ],
       ),
@@ -444,8 +444,8 @@ class _NewSessionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton.extended(
       onPressed: () => _showCreateDialog(context),
-      backgroundColor: kDarkAccentDim,
-      foregroundColor: kDarkTextHigh,
+      backgroundColor: kDarkAccent,
+      foregroundColor: Colors.white,
       icon: const Icon(Icons.add_rounded),
       label: const Text(
         'New Session',
@@ -460,14 +460,12 @@ class _NewSessionButton extends StatelessWidget {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: kDarkSurface,
+      backgroundColor: kGlassFillStrong,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         side: BorderSide(color: kDarkBorder),
       ),
-      builder: (ctx) => _CreateSessionSheet(
-        notifier: notifier,
-      ),
+      builder: (ctx) => _CreateSessionSheet(notifier: notifier),
     );
   }
 }
@@ -528,11 +526,16 @@ class _CreateSessionSheetState extends State<_CreateSessionSheet> {
             'New Session',
             style: TextStyle(
               fontFamily: 'monospace',
-              fontSize: 16,
+              fontSize: 17,
               color: kDarkTextHigh,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
+              letterSpacing: 0.8,
             ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Create a fresh container and choose an agent program if needed.',
+            style: TextStyle(fontSize: 12, color: kDarkTextMid, height: 1.5),
           ),
           const SizedBox(height: 20),
           _DarkTextField(
@@ -552,11 +555,11 @@ class _CreateSessionSheetState extends State<_CreateSessionSheet> {
             width: double.infinity,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: kDarkAccentDim,
-                foregroundColor: kDarkTextHigh,
+                backgroundColor: kDarkAccent,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
               onPressed: _create,
@@ -619,22 +622,22 @@ class _DarkTextField extends StatelessWidget {
               fontFamily: 'monospace',
             ),
             filled: true,
-            fillColor: const Color(0xFF0F1A14),
+            fillColor: kEditorBg,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 10,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: kDarkBorder),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: kDarkBorder),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: kDarkAccentDim, width: 1.5),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: kDarkAccent, width: 1.5),
             ),
           ),
         ),

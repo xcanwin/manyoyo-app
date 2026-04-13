@@ -1,9 +1,11 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:manyoyo_app/app/theme.dart';
 
-/// Compact icon button used in dark-themed top bars and tool rows.
+/// Compact icon button used in shared top bars and tool rows.
 class DarkIconBtn extends StatelessWidget {
   const DarkIconBtn({
     super.key,
@@ -26,12 +28,29 @@ class DarkIconBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: Padding(
-          padding: EdgeInsets.all(padding),
-          child: Icon(icon, size: iconSize, color: kDarkTextMid),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: kGlassFillSoft,
+              borderRadius: BorderRadius.circular(borderRadius),
+              border: Border.all(color: kDarkBorder),
+              boxShadow: const [
+                BoxShadow(
+                  color: kGlassShadow,
+                  blurRadius: 16,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(padding),
+              child: Icon(icon, size: iconSize, color: kDarkTextMid),
+            ),
+          ),
         ),
       ),
     );
@@ -106,12 +125,49 @@ class DarkPageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: Column(
-        children: [
-          header,
-          Expanded(child: body),
-          ?footer,
-        ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFF2F4F8), Color(0xFFEAEFF6), Color(0xFFF4F0EB)],
+          ),
+        ),
+        child: Stack(
+          children: [
+            const Positioned(
+              top: -120,
+              left: -40,
+              child: _GlowOrb(
+                size: 240,
+                colors: [kGlassGlow, Color(0x00CFE0FF)],
+              ),
+            ),
+            const Positioned(
+              top: 120,
+              right: -90,
+              child: _GlowOrb(
+                size: 260,
+                colors: [kGlassGlowWarm, Color(0x00FFE7D6)],
+              ),
+            ),
+            const Positioned(
+              bottom: -110,
+              left: 40,
+              child: _GlowOrb(
+                size: 220,
+                colors: [Color(0x2FBFCFE1), Color(0x00BFCFE1)],
+              ),
+            ),
+            Column(
+              children: [
+                header,
+                Expanded(child: body),
+                ?footer,
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -139,82 +195,93 @@ class DarkPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: kDarkSurface,
-        border: Border(bottom: BorderSide(color: kDarkBorder)),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        12,
+        MediaQuery.paddingOf(context).top + 10,
+        12,
+        10,
       ),
-      padding: EdgeInsets.only(
-        top: MediaQuery.paddingOf(context).top + 8,
-        left: 12,
-        right: 12,
-        bottom: 12,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (onBack != null)
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_rounded,
-                    color: kDarkTextMid,
-                  ),
-                  onPressed: onBack,
-                  tooltip: '返回',
-                ),
-              if (leading != null) ...[
-                if (onBack == null) const SizedBox(width: 4),
-                leading!,
-                const SizedBox(width: 10),
-              ],
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 13,
-                        color: kDarkTextHigh,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+      child: _GlassPanel(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+        radius: 24,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (onBack != null)
+                  Container(
+                    margin: const EdgeInsets.only(right: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.42),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: kDarkBorder),
                     ),
-                    if (subtitle != null && subtitle!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: kDarkTextMid,
+                      ),
+                      onPressed: onBack,
+                      tooltip: '返回',
+                    ),
+                  ),
+                if (leading != null) ...[
+                  if (onBack == null) const SizedBox(width: 4),
+                  leading!,
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Text(
-                        subtitle!,
+                        title,
                         style: const TextStyle(
-                          fontSize: 11,
-                          color: kDarkTextLow,
+                          fontFamily: 'monospace',
+                          fontSize: 13,
+                          color: kDarkTextHigh,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: 0.3,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (subtitle != null && subtitle!.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle!,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: kDarkTextLow,
+                            letterSpacing: 0.4,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              if (actions.isNotEmpty) ...[const SizedBox(width: 8), ...actions],
-            ],
-          ),
-          if (tabs.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: tabs
-                  .map((tab) => _DarkTabChip(tab: tab))
-                  .toList(growable: false),
+                if (actions.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  ...actions,
+                ],
+              ],
             ),
+            if (tabs.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: tabs
+                    .map((tab) => _DarkTabChip(tab: tab))
+                    .toList(growable: false),
+              ),
+            ],
+            if (bottom != null) ...[const SizedBox(height: 14), bottom!],
           ],
-          if (bottom != null) ...[const SizedBox(height: 12), bottom!],
-        ],
+        ),
       ),
     );
   }
@@ -236,13 +303,10 @@ class DarkSurfaceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: kDarkBorder),
-      ),
+    return _GlassPanel(
       padding: padding,
+      radius: radius,
+      tint: color,
       child: child,
     );
   }
@@ -303,10 +367,14 @@ class DarkStateMessage extends StatelessWidget {
                   FilledButton(
                     onPressed: onAction,
                     style: FilledButton.styleFrom(
-                      backgroundColor: kDarkAccentDim,
-                      foregroundColor: kDarkTextHigh,
+                      backgroundColor: kDarkAccent,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
                       ),
                     ),
                     child: Text(
@@ -331,9 +399,11 @@ class _DarkTabChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = tab.selected ? kDarkTextHigh : kDarkTextMid;
-    final bg = tab.selected ? const Color(0xFF223328) : const Color(0xFF111A14);
-    final border = tab.selected ? kDarkAccentDim : kDarkBorder;
+    final fg = tab.selected ? kDarkAccent : kDarkTextMid;
+    final bg = tab.selected
+        ? const Color(0xFFDCE4F2)
+        : Colors.white.withValues(alpha: 0.3);
+    final border = tab.selected ? const Color(0xFFB1C0D7) : kDarkBorder;
 
     return Material(
       color: Colors.transparent,
@@ -345,6 +415,13 @@ class _DarkTabChip extends StatelessWidget {
             color: bg,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(color: border),
+            boxShadow: const [
+              BoxShadow(
+                color: kGlassShadow,
+                blurRadius: 12,
+                offset: Offset(0, 6),
+              ),
+            ],
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
@@ -364,6 +441,71 @@ class _DarkTabChip extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GlassPanel extends StatelessWidget {
+  const _GlassPanel({
+    required this.child,
+    required this.padding,
+    required this.radius,
+    this.tint = kGlassFillSoft,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final double radius;
+  final Color tint;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [tint, Colors.white.withValues(alpha: 0.62)],
+            ),
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(color: kDarkBorder),
+            boxShadow: const [
+              BoxShadow(
+                color: kGlassShadow,
+                blurRadius: 28,
+                offset: Offset(0, 16),
+              ),
+            ],
+          ),
+          padding: padding,
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  const _GlowOrb({required this.size, required this.colors});
+
+  final double size;
+  final List<Color> colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(colors: colors),
         ),
       ),
     );
