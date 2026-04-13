@@ -455,9 +455,6 @@ class _NewSessionButton extends StatelessWidget {
   }
 
   Future<void> _showCreateDialog(BuildContext context) async {
-    final nameController = TextEditingController();
-    final yoloController = TextEditingController();
-
     final notifier = context.read<SessionsNotifier>();
 
     await showModalBottomSheet<void>(
@@ -468,80 +465,114 @@ class _NewSessionButton extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         side: BorderSide(color: kDarkBorder),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.viewInsetsOf(ctx).bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'New Session',
-              style: TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 16,
-                color: kDarkTextHigh,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 20),
-            _DarkTextField(
-              controller: nameController,
-              label: 'Container name',
-              hint: 'my-agent-001',
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            _DarkTextField(
-              controller: yoloController,
-              label: 'Agent (optional)',
-              hint: 'claude / gemini / codex',
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: kDarkAccentDim,
-                  foregroundColor: kDarkTextHigh,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) return;
-                  Navigator.of(ctx).pop();
-                  await notifier.createSession(
-                    containerName: name,
-                    yolo: yoloController.text.trim().isEmpty
-                        ? null
-                        : yoloController.text.trim(),
-                  );
-                },
-                child: const Text(
-                  'Create',
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    letterSpacing: 1,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+      builder: (ctx) => _CreateSessionSheet(
+        notifier: notifier,
       ),
     );
+  }
+}
 
-    nameController.dispose();
-    yoloController.dispose();
+class _CreateSessionSheet extends StatefulWidget {
+  const _CreateSessionSheet({required this.notifier});
+
+  final SessionsNotifier notifier;
+
+  @override
+  State<_CreateSessionSheet> createState() => _CreateSessionSheetState();
+}
+
+class _CreateSessionSheetState extends State<_CreateSessionSheet> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _yoloController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _yoloController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _yoloController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _create() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) return;
+
+    final yolo = _yoloController.text.trim();
+    Navigator.of(context).pop();
+    await widget.notifier.createSession(
+      containerName: name,
+      yolo: yolo.isEmpty ? null : yolo,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'New Session',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 16,
+              color: kDarkTextHigh,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          _DarkTextField(
+            controller: _nameController,
+            label: 'Container name',
+            hint: 'my-agent-001',
+            autofocus: true,
+          ),
+          const SizedBox(height: 12),
+          _DarkTextField(
+            controller: _yoloController,
+            label: 'Agent (optional)',
+            hint: 'claude / gemini / codex',
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: kDarkAccentDim,
+                foregroundColor: kDarkTextHigh,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: _create,
+              child: const Text(
+                'Create',
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  letterSpacing: 1,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
