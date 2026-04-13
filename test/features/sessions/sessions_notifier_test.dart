@@ -63,6 +63,38 @@ void main() {
     expect(notifier.error, isNull);
   });
 
+  test('loadSessions supports current web sessions payload', () async {
+    final body = jsonEncode({
+      'sessions': [
+        {
+          'name': 'demo~agent-2',
+          'containerName': 'demo',
+          'agentId': 'agent-2',
+          'agentProgram': 'codex',
+          'status': 'running',
+        },
+        {
+          'name': 'demo',
+          'containerName': 'demo',
+          'agentId': 'default',
+          'agentProgram': 'codex',
+          'status': 'history',
+        },
+      ],
+    });
+    final client = makeClient(body);
+    final notifier = SessionsNotifier(client);
+
+    await notifier.loadSessions();
+
+    expect(notifier.containers, hasLength(1));
+    expect(notifier.containers.first.containerName, equals('demo'));
+    expect(notifier.containers.first.agents, hasLength(2));
+    expect(notifier.containers.first.agents.first.sessionRef, equals('demo~agent-2'));
+    expect(notifier.containers.first.agents.first.running, isTrue);
+    expect(notifier.containers.first.agents.last.isHistoryOnly, isTrue);
+  });
+
   test('loadSessions sets error on failure', () async {
     final client = makeClient('{"error":"server error"}', status: 500);
     final notifier = SessionsNotifier(client);
@@ -90,7 +122,7 @@ void main() {
   });
 
   test('removeSession calls DELETE and reloads', () async {
-    final body = jsonEncode({'containers': []});
+    final body = jsonEncode({'sessions': []});
     final client = makeClient(body);
     final notifier = SessionsNotifier(client);
 
